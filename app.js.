@@ -1,0 +1,1087 @@
+/* ═══════════════════════════════════════════════════════
+   BOLO — app.js
+   Full application logic: data, rendering, interactions
+═══════════════════════════════════════════════════════ */
+
+'use strict';
+
+// ──────────────────────────────────────────────────────
+// CONSTANTS
+// ──────────────────────────────────────────────────────
+
+/** Avatar background gradients / solid colors */
+const AVATAR_COLORS = [
+  '#e8ff00',  // neon yellow
+  '#00f5d4',  // cyan
+  '#ff3c6e',  // hot pink
+  '#ff6b00',  // orange
+  '#b3ff00',  // lime
+  '#00cfff',  // sky
+  '#ff00aa',  // magenta
+];
+
+/** Text color for each avatar bg (for contrast) */
+const AVATAR_TEXT = ['#080808','#080808','#f4f4f4','#080808','#080808','#080808','#080808'];
+
+const MAX_CHARS = 280;
+const CIRCUMFERENCE = 94.2; // 2π × r(15)
+
+// ──────────────────────────────────────────────────────
+// SEED DATA
+// ──────────────────────────────────────────────────────
+
+let tweets = [
+  {
+    id: 1, name: 'Fatima Noor', handle: 'fatima_noor', av: 'ف',
+    ci: 0, verified: true,
+    text: 'Lahore ki sardi mein chai ka cup — duniya ki sab se perfect cheez ☕❄️\nKoi mujhe contradict nahi kar sakta. #LahoreWinter #Chai',
+    time: '2m', likes: 247, liked: false, rts: 34, replies: 19, img: '☕', own: false,
+  },
+  {
+    id: 2, name: 'Bilal Ahmed', handle: 'bilal_codes', av: 'ب',
+    ci: 2, verified: false,
+    text: 'Kal raat 3 baje tak code karta raha — aaj production mein bug 😭\n\nSabq: jo raat ko theek lagta hai woh subah broken hota hai.\n\n#DevLife #PakistaniDevelopers',
+    time: '8m', likes: 891, liked: false, rts: 156, replies: 77, img: null, own: false,
+  },
+  {
+    id: 3, name: 'Zara Hussain', handle: 'zara_writes', av: 'ز',
+    ci: 1, verified: true,
+    text: 'Faiz Ahmad Faiz:\n"Hum dekhenge"\n\nAaj bhi yeh lafz utne hi taaqatwar hain.\nUrdu adab ki koi sani nahi. 📖 #UrduShayari #Faiz',
+    time: '15m', likes: 1203, liked: false, rts: 445, replies: 88, img: null, own: false,
+  },
+  {
+    id: 4, name: 'Hamza Dev', handle: 'hamza_pk', av: 'ح',
+    ci: 3, verified: true,
+    text: 'Pehli open source PR merge ho gayi!! 🎉🎉\n\nChota contribution tha lekin khushi bohot bari hai.\n@github community ka dil se shukriya ❤️\n\n#OpenSource #Pakistan',
+    time: '23m', likes: 2341, liked: false, rts: 678, replies: 143, img: '🎉', own: false,
+  },
+  {
+    id: 5, name: 'Sana Rizvi', handle: 'sana_r', av: 'س',
+    ci: 5, verified: false,
+    text: 'Islamabad mein cherry blossoms khil gaye! 🌸\nMargalla ki pahariyon ke saath — mashallah kya manzar hai.\n\n#Islamabad #Spring',
+    time: '31m', likes: 567, liked: false, rts: 123, replies: 42, img: '🌸', own: false,
+  },
+  {
+    id: 6, name: 'Usman Qureshi', handle: 'usman_q', av: 'ع',
+    ci: 4, verified: false,
+    text: 'PSL 2026 shuru hone wala hai!! 🏏🔥\nIs baar Lahore Qalandars ki championship PAKKI hai InshaAllah.\n\nKaun agree karta hai? 👇\n\n#PSL2026 #CricketPakistan',
+    time: '45m', likes: 3456, liked: false, rts: 987, replies: 334, img: '🏏', own: false,
+  },
+  {
+    id: 7, name: 'Aisha Khan', handle: 'aisha_dev', av: 'ا',
+    ci: 6, verified: true,
+    text: 'Pakistan mein tech startups ki taadaad 2024 mein 3x ho gayi! 🚀\n\nNojawan Pakistan badal raha hai. Proud moment.\n\n#PakistanTech #Startup',
+    time: '1h', likes: 1876, liked: false, rts: 543, replies: 91, img: null, own: false,
+  },
+];
+
+let myTweets = [];
+let nextId   = 1000;
+
+const trends = [
+  { cat: 'Pakistan · Trending',  tag: '#PSL2026',             n: '67.2K' },
+  { cat: 'Lahore mein Trending', tag: '#LahoreWinter',        n: '14.8K' },
+  { cat: 'Technology',           tag: '#PakistaniDevelopers', n: '9.3K'  },
+  { cat: 'Sports · Cricket',     tag: '#CricketPakistan',     n: '89.1K' },
+  { cat: 'Entertainment',        tag: '#UrduShayari',         n: '31.4K' },
+  { cat: 'Trending',             tag: '#Islamabad',           n: '22.7K' },
+];
+
+const suggestions = [
+  { name: 'Imran Noor',    handle: 'imran_tech', av: 'ا', ci: 0, following: false },
+  { name: 'Hira Baig',     handle: 'hira_art',   av: 'ہ', ci: 2, following: false },
+  { name: 'Ali Raza',      handle: 'ali_dev',    av: 'ع', ci: 1, following: false },
+  { name: 'Mehreen Anwar', handle: 'mehreen_w',  av: 'م', ci: 4, following: false },
+];
+
+// ──────────────────────────────────────────────────────
+// UTILITIES
+// ──────────────────────────────────────────────────────
+
+/**
+ * Convert raw tweet text → HTML with formatted hashtags/mentions
+ * @param {string} text
+ * @returns {string}
+ */
+function formatText(text) {
+  return text
+    .replace(/\n/g, '<br>')
+    .replace(/#(\w+)/g,  '<span class="htag">#$1</span>')
+    .replace(/@(\w+)/g,  '<span class="mtag">@$1</span>');
+}
+
+/**
+ * Build an avatar element style string
+ * @param {number} ci - color index
+ * @returns {{ bg: string, fg: string }}
+ */
+function avatarStyle(ci) {
+  return {
+    bg: AVATAR_COLORS[ci % AVATAR_COLORS.length],
+    fg: AVATAR_TEXT[ci  % AVATAR_TEXT.length],
+  };
+}
+
+// ──────────────────────────────────────────────────────
+// RENDER — TWEETS
+// ──────────────────────────────────────────────────────
+
+/**
+ * Render a list of tweet objects into a container element
+ * @param {Array}  list        - tweet objects
+ * @param {string} containerId - DOM id
+ */
+function renderTweets(list, containerId) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+
+  if (!list.length) {
+    el.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">⬡</div>
+        <div class="empty-title">KHAMOSHI HAI</div>
+        <div class="empty-sub">Abhi koi tweet nahi — pehle tweet likhein!</div>
+      </div>`;
+    return;
+  }
+
+  el.innerHTML = list.map((t, i) => {
+    const av = avatarStyle(t.ci);
+    return `
+      <article class="tweet-card" style="animation-delay:${Math.min(i * 0.055, 0.44)}s">
+
+        <div class="tw-avatar${t.verified ? ' vfy' : ''}"
+          style="background:${av.bg};color:${av.fg}">${t.av}</div>
+
+        <div class="tw-body">
+          <div class="tw-meta">
+            <span class="tw-name">${t.name}</span>
+            <span class="tw-handle">@${t.handle}</span>
+            <span class="tw-dot">·</span>
+            <span class="tw-time">${t.time}</span>
+          </div>
+
+          <div class="tw-text">${formatText(t.text)}</div>
+
+          ${t.img ? `<div class="tw-img">${t.img}</div>` : ''}
+
+          <div class="tw-actions">
+            <div class="tw-act reply" onclick="event.stopPropagation(); showToast('Reply — jald aa raha hai ⟳')">
+              <span class="act-icon">💬</span> ${t.replies}
+            </div>
+            <div class="tw-act rt" onclick="event.stopPropagation(); handleRT(${t.id})">
+              <span class="act-icon">⟳</span> ${t.rts}
+            </div>
+            <div class="tw-act like${t.liked ? ' liked' : ''}"
+              onclick="event.stopPropagation(); handleLike(${t.id})">
+              <span class="act-icon">${t.liked ? '♥' : '♡'}</span> ${t.likes}
+            </div>
+            <div class="tw-act" onclick="event.stopPropagation(); showToast('Link copy ho gaya! ◈')">
+              <span class="act-icon">↗</span>
+            </div>
+          </div>
+        </div>
+
+      </article>`;
+  }).join('');
+}
+
+// ──────────────────────────────────────────────────────
+// INTERACTIONS — LIKE / RETWEET
+// ──────────────────────────────────────────────────────
+
+/**
+ * Toggle like state on a tweet
+ * @param {number} id
+ */
+function handleLike(id) {
+  const tweet = tweets.find(t => t.id === id);
+  if (!tweet) return;
+
+  tweet.liked  = !tweet.liked;
+  tweet.likes += tweet.liked ? 1 : -1;
+
+  refreshAll();
+  if (tweet.liked) showToast('Pasand kiya ♥');
+}
+
+/**
+ * Increment retweet count
+ * @param {number} id
+ */
+function handleRT(id) {
+  const tweet = tweets.find(t => t.id === id);
+  if (!tweet) return;
+
+  tweet.rts++;
+  refreshAll();
+  showToast('Retweet ho gaya ⟳');
+}
+
+/** Re-render both feed and profile tweet lists */
+function refreshAll() {
+  renderTweets(tweets, 'feedList');
+  renderProfileTweets();
+}
+
+// ──────────────────────────────────────────────────────
+// COMPOSE
+// ──────────────────────────────────────────────────────
+
+/**
+ * Update character counter ring and enable/disable send button
+ * @param {string} inputId   - textarea element id
+ * @param {string} counterId - counter span id
+ * @param {string} btnId     - send button id
+ */
+function handleCompose(inputId, counterId, btnId) {
+  const val    = document.getElementById(inputId).value;
+  const used   = val.length;
+  const rem    = MAX_CHARS - used;
+  const pct    = used / MAX_CHARS;
+
+  // Counter text
+  const cntEl  = document.getElementById(counterId);
+  cntEl.textContent = rem < 40 ? rem : '';
+  cntEl.className   = 'ring-num' + (rem < 20 ? ' over' : rem < 50 ? ' warn' : '');
+
+  // SVG ring (prefix "feed" or "modal")
+  const prefix    = inputId === 'feedInput' ? 'feed' : 'modal';
+  const circleEl  = document.getElementById(prefix + 'RingCircle');
+  if (circleEl) {
+    const offset = CIRCUMFERENCE * (1 - pct);
+    circleEl.style.strokeDashoffset = offset;
+    circleEl.className = 'ring-fg' + (rem < 20 ? ' over' : rem < 50 ? ' warn' : '');
+  }
+
+  // Send button
+  document.getElementById(btnId).disabled = !val.trim();
+}
+
+/** Post tweet from inline feed compose */
+function postFromFeed() {
+  const val = document.getElementById('feedInput').value.trim();
+  if (!val) return;
+
+  createTweet(val);
+
+  document.getElementById('feedInput').value = '';
+  handleCompose('feedInput', 'feedCounter', 'feedSendBtn');
+}
+
+/** Post tweet from modal compose */
+function postFromModal() {
+  const val = document.getElementById('modalInput').value.trim();
+  if (!val) return;
+
+  createTweet(val);
+
+  document.getElementById('modalInput').value = '';
+  handleCompose('modalInput', 'modalCounter', 'modalSendBtn');
+  closeModal();
+}
+
+/**
+ * Create a new tweet object and prepend to feed
+ * @param {string} text - tweet content
+ */
+function createTweet(text) {
+  const tweet = {
+    id:       nextId++,
+    name:     'Ahmad Ali',
+    handle:   'ahmad_ali',
+    av:       'ع',
+    ci:       0,
+    verified: true,
+    text,
+    time:     'Abhi',
+    likes:    0,
+    liked:    false,
+    rts:      0,
+    replies:  0,
+    img:      null,
+    own:      true,
+  };
+
+  tweets.unshift(tweet);
+  myTweets.unshift(tweet);
+
+  refreshAll();
+  updateProfileStats();
+  showToast('Tweet live ho gaya! ⬡');
+}
+
+// ──────────────────────────────────────────────────────
+// RENDER — TRENDS
+// ──────────────────────────────────────────────────────
+
+/** Render trends into right panel and explore page */
+function renderTrends() {
+
+  // Right panel (compact rows)
+  document.getElementById('trendList').innerHTML = trends.map(t => `
+    <div class="trend-row">
+      <div class="tr-cat">${t.cat}</div>
+      <div class="tr-tag">${t.tag}</div>
+      <div class="tr-n">${t.n} tweets</div>
+    </div>
+  `).join('');
+
+  // Explore page (cards)
+  const exploreEl = document.getElementById('exploreTrends');
+  if (exploreEl) {
+    exploreEl.innerHTML = trends.map(t => `
+      <div class="trend-card">
+        <div class="tc-cat">${t.cat}</div>
+        <div class="tc-tag">${t.tag}</div>
+        <div class="tc-n">${t.n} tweets</div>
+      </div>
+    `).join('');
+  }
+}
+
+// ──────────────────────────────────────────────────────
+// RENDER — WHO TO FOLLOW
+// ──────────────────────────────────────────────────────
+
+/** Render follow suggestions */
+function renderWho() {
+  document.getElementById('whoList').innerHTML = suggestions.map((s, i) => {
+    const av = avatarStyle(s.ci);
+    return `
+      <div class="who-row">
+        <div class="who-av" style="background:${av.bg};color:${av.fg}">${s.av}</div>
+        <div class="who-info">
+          <div class="who-name">${s.name}</div>
+          <div class="who-handle">@${s.handle}</div>
+        </div>
+        <button class="follow-btn${s.following ? ' following' : ''}" onclick="toggleFollow(${i})">
+          ${s.following ? 'FOLLOWING' : 'FOLLOW'}
+        </button>
+      </div>`;
+  }).join('');
+}
+
+/**
+ * Toggle follow/unfollow
+ * @param {number} i - index in suggestions array
+ */
+function toggleFollow(i) {
+  suggestions[i].following = !suggestions[i].following;
+  renderWho();
+  showToast(
+    suggestions[i].following
+      ? `@${suggestions[i].handle} ko follow kiya ✓`
+      : 'Unfollow ho gaya'
+  );
+}
+
+// ──────────────────────────────────────────────────────
+// PROFILE
+// ──────────────────────────────────────────────────────
+
+/** Render only the current user's own tweets on the profile page */
+function renderProfileTweets() {
+  const own = tweets.filter(t => t.own);
+  renderTweets(own, 'profFeed');
+}
+
+/** Update tweet count and other stats shown on profile */
+function updateProfileStats() {
+  const count = tweets.filter(t => t.own).length;
+  const el    = document.getElementById('profTweetCount');
+  if (el) el.textContent = count;
+}
+
+// ──────────────────────────────────────────────────────
+// PAGE NAVIGATION
+// ──────────────────────────────────────────────────────
+
+/**
+ * Switch the visible page
+ * @param {string} page - 'feed' | 'explore' | 'profile'
+ */
+function showPage(page) {
+  // Hide all pages
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+
+  const target = document.getElementById('page-' + page);
+  if (target) target.classList.add('active');
+
+  // Update nav active state
+  document.querySelectorAll('.nav-item').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.page === page);
+  });
+
+  // Page-specific init
+  if (page === 'profile') {
+    renderProfileTweets();
+    updateProfileStats();
+  }
+}
+
+/**
+ * Switch active tab within a header tab bar
+ * @param {HTMLElement} el - the clicked tab element
+ */
+function switchHTab(el) {
+  const parent = el.closest('.header-tabs');
+  parent.querySelectorAll('.htab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ──────────────────────────────────────────────────────
+// MODAL
+// ──────────────────────────────────────────────────────
+
+/** Open the compose modal */
+function openModal() {
+  document.getElementById('modalOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('modalInput').focus(), 180);
+}
+
+/** Close the compose modal */
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+
+/**
+ * Close modal when clicking the dark overlay background
+ * @param {MouseEvent} e
+ */
+function overlayClick(e) {
+  if (e.target.id === 'modalOverlay') closeModal();
+}
+
+// ──────────────────────────────────────────────────────
+// TOAST
+// ──────────────────────────────────────────────────────
+
+let _toastTimer;
+
+/**
+ * Show a brief notification toast
+ * @param {string} msg
+ */
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+// ──────────────────────────────────────────────────────
+// CURSOR GLOW
+// ──────────────────────────────────────────────────────
+
+(function initCursorGlow() {
+  const glow = document.getElementById('cursorGlow');
+  if (!glow) return;
+
+  document.addEventListener('mousemove', e => {
+    glow.style.left = e.clientX + 'px';
+    glow.style.top  = e.clientY + 'px';
+  });
+})();
+
+// ──────────────────────────────────────────────────────
+// KEYBOARD SHORTCUTS
+// ──────────────────────────────────────────────────────
+
+document.addEventListener('keydown', e => {
+  const isModalOpen = document.getElementById('modalOverlay').classList.contains('open');
+
+  // Escape — close modal
+  if (e.key === 'Escape' && isModalOpen) {
+    closeModal();
+    return;
+  }
+
+  // Ctrl/Cmd + N — open compose modal
+  if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+    e.preventDefault();
+    openModal();
+    return;
+  }
+
+  // Ctrl/Cmd + Enter — submit active compose
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    if (isModalOpen) postFromModal();
+    else             postFromFeed();
+    return;
+  }
+
+  // G + F — go to feed
+  if (e.key === 'f' && !isModalOpen && document.activeElement.tagName !== 'TEXTAREA') {
+    showPage('feed');
+  }
+  // G + P — go to profile
+  if (e.key === 'p' && !isModalOpen && document.activeElement.tagName !== 'TEXTAREA') {
+    showPage('profile');
+  }
+  // G + E — go to explore
+  if (e.key === 'e' && !isModalOpen && document.activeElement.tagName !== 'TEXTAREA') {
+    showPage('explore');
+  }
+});
+
+// ──────────────────────────────────────────────────────
+// INIT — runs on page load
+// ──────────────────────────────────────────────────────
+
+(function init() {
+  renderTweets(tweets, 'feedList');
+  renderTrends();
+  renderWho();
+  renderProfileTweets();
+  updateProfileStats();
+
+  console.log('%c BOLO — App Ready ', 'background:#e8ff00;color:#080808;font-weight:bold;padding:4px 8px;');
+  console.log('%c Shortcuts: Ctrl+N (new post) · Ctrl+Enter (send) · f/p/e (navigate) ',
+    'color:#666;font-size:11px;');
+})();/* ═══════════════════════════════════════════════════════
+   BOLO — app.js
+   Full application logic: data, rendering, interactions
+═══════════════════════════════════════════════════════ */
+
+'use strict';
+
+// ──────────────────────────────────────────────────────
+// CONSTANTS
+// ──────────────────────────────────────────────────────
+
+/** Avatar background gradients / solid colors */
+const AVATAR_COLORS = [
+  '#e8ff00',  // neon yellow
+  '#00f5d4',  // cyan
+  '#ff3c6e',  // hot pink
+  '#ff6b00',  // orange
+  '#b3ff00',  // lime
+  '#00cfff',  // sky
+  '#ff00aa',  // magenta
+];
+
+/** Text color for each avatar bg (for contrast) */
+const AVATAR_TEXT = ['#080808','#080808','#f4f4f4','#080808','#080808','#080808','#080808'];
+
+const MAX_CHARS = 280;
+const CIRCUMFERENCE = 94.2; // 2π × r(15)
+
+// ──────────────────────────────────────────────────────
+// SEED DATA
+// ──────────────────────────────────────────────────────
+
+let tweets = [
+  {
+    id: 1, name: 'Fatima Noor', handle: 'fatima_noor', av: 'ف',
+    ci: 0, verified: true,
+    text: 'Lahore ki sardi mein chai ka cup — duniya ki sab se perfect cheez ☕❄️\nKoi mujhe contradict nahi kar sakta. #LahoreWinter #Chai',
+    time: '2m', likes: 247, liked: false, rts: 34, replies: 19, img: '☕', own: false,
+  },
+  {
+    id: 2, name: 'Bilal Ahmed', handle: 'bilal_codes', av: 'ب',
+    ci: 2, verified: false,
+    text: 'Kal raat 3 baje tak code karta raha — aaj production mein bug 😭\n\nSabq: jo raat ko theek lagta hai woh subah broken hota hai.\n\n#DevLife #PakistaniDevelopers',
+    time: '8m', likes: 891, liked: false, rts: 156, replies: 77, img: null, own: false,
+  },
+  {
+    id: 3, name: 'Zara Hussain', handle: 'zara_writes', av: 'ز',
+    ci: 1, verified: true,
+    text: 'Faiz Ahmad Faiz:\n"Hum dekhenge"\n\nAaj bhi yeh lafz utne hi taaqatwar hain.\nUrdu adab ki koi sani nahi. 📖 #UrduShayari #Faiz',
+    time: '15m', likes: 1203, liked: false, rts: 445, replies: 88, img: null, own: false,
+  },
+  {
+    id: 4, name: 'Hamza Dev', handle: 'hamza_pk', av: 'ح',
+    ci: 3, verified: true,
+    text: 'Pehli open source PR merge ho gayi!! 🎉🎉\n\nChota contribution tha lekin khushi bohot bari hai.\n@github community ka dil se shukriya ❤️\n\n#OpenSource #Pakistan',
+    time: '23m', likes: 2341, liked: false, rts: 678, replies: 143, img: '🎉', own: false,
+  },
+  {
+    id: 5, name: 'Sana Rizvi', handle: 'sana_r', av: 'س',
+    ci: 5, verified: false,
+    text: 'Islamabad mein cherry blossoms khil gaye! 🌸\nMargalla ki pahariyon ke saath — mashallah kya manzar hai.\n\n#Islamabad #Spring',
+    time: '31m', likes: 567, liked: false, rts: 123, replies: 42, img: '🌸', own: false,
+  },
+  {
+    id: 6, name: 'Usman Qureshi', handle: 'usman_q', av: 'ع',
+    ci: 4, verified: false,
+    text: 'PSL 2026 shuru hone wala hai!! 🏏🔥\nIs baar Lahore Qalandars ki championship PAKKI hai InshaAllah.\n\nKaun agree karta hai? 👇\n\n#PSL2026 #CricketPakistan',
+    time: '45m', likes: 3456, liked: false, rts: 987, replies: 334, img: '🏏', own: false,
+  },
+  {
+    id: 7, name: 'Aisha Khan', handle: 'aisha_dev', av: 'ا',
+    ci: 6, verified: true,
+    text: 'Pakistan mein tech startups ki taadaad 2024 mein 3x ho gayi! 🚀\n\nNojawan Pakistan badal raha hai. Proud moment.\n\n#PakistanTech #Startup',
+    time: '1h', likes: 1876, liked: false, rts: 543, replies: 91, img: null, own: false,
+  },
+];
+
+let myTweets = [];
+let nextId   = 1000;
+
+const trends = [
+  { cat: 'Pakistan · Trending',  tag: '#PSL2026',             n: '67.2K' },
+  { cat: 'Lahore mein Trending', tag: '#LahoreWinter',        n: '14.8K' },
+  { cat: 'Technology',           tag: '#PakistaniDevelopers', n: '9.3K'  },
+  { cat: 'Sports · Cricket',     tag: '#CricketPakistan',     n: '89.1K' },
+  { cat: 'Entertainment',        tag: '#UrduShayari',         n: '31.4K' },
+  { cat: 'Trending',             tag: '#Islamabad',           n: '22.7K' },
+];
+
+const suggestions = [
+  { name: 'Imran Noor',    handle: 'imran_tech', av: 'ا', ci: 0, following: false },
+  { name: 'Hira Baig',     handle: 'hira_art',   av: 'ہ', ci: 2, following: false },
+  { name: 'Ali Raza',      handle: 'ali_dev',    av: 'ع', ci: 1, following: false },
+  { name: 'Mehreen Anwar', handle: 'mehreen_w',  av: 'م', ci: 4, following: false },
+];
+
+// ──────────────────────────────────────────────────────
+// UTILITIES
+// ──────────────────────────────────────────────────────
+
+/**
+ * Convert raw tweet text → HTML with formatted hashtags/mentions
+ * @param {string} text
+ * @returns {string}
+ */
+function formatText(text) {
+  return text
+    .replace(/\n/g, '<br>')
+    .replace(/#(\w+)/g,  '<span class="htag">#$1</span>')
+    .replace(/@(\w+)/g,  '<span class="mtag">@$1</span>');
+}
+
+/**
+ * Build an avatar element style string
+ * @param {number} ci - color index
+ * @returns {{ bg: string, fg: string }}
+ */
+function avatarStyle(ci) {
+  return {
+    bg: AVATAR_COLORS[ci % AVATAR_COLORS.length],
+    fg: AVATAR_TEXT[ci  % AVATAR_TEXT.length],
+  };
+}
+
+// ──────────────────────────────────────────────────────
+// RENDER — TWEETS
+// ──────────────────────────────────────────────────────
+
+/**
+ * Render a list of tweet objects into a container element
+ * @param {Array}  list        - tweet objects
+ * @param {string} containerId - DOM id
+ */
+function renderTweets(list, containerId) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+
+  if (!list.length) {
+    el.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">⬡</div>
+        <div class="empty-title">KHAMOSHI HAI</div>
+        <div class="empty-sub">Abhi koi tweet nahi — pehle tweet likhein!</div>
+      </div>`;
+    return;
+  }
+
+  el.innerHTML = list.map((t, i) => {
+    const av = avatarStyle(t.ci);
+    return `
+      <article class="tweet-card" style="animation-delay:${Math.min(i * 0.055, 0.44)}s">
+
+        <div class="tw-avatar${t.verified ? ' vfy' : ''}"
+          style="background:${av.bg};color:${av.fg}">${t.av}</div>
+
+        <div class="tw-body">
+          <div class="tw-meta">
+            <span class="tw-name">${t.name}</span>
+            <span class="tw-handle">@${t.handle}</span>
+            <span class="tw-dot">·</span>
+            <span class="tw-time">${t.time}</span>
+          </div>
+
+          <div class="tw-text">${formatText(t.text)}</div>
+
+          ${t.img ? `<div class="tw-img">${t.img}</div>` : ''}
+
+          <div class="tw-actions">
+            <div class="tw-act reply" onclick="event.stopPropagation(); showToast('Reply — jald aa raha hai ⟳')">
+              <span class="act-icon">💬</span> ${t.replies}
+            </div>
+            <div class="tw-act rt" onclick="event.stopPropagation(); handleRT(${t.id})">
+              <span class="act-icon">⟳</span> ${t.rts}
+            </div>
+            <div class="tw-act like${t.liked ? ' liked' : ''}"
+              onclick="event.stopPropagation(); handleLike(${t.id})">
+              <span class="act-icon">${t.liked ? '♥' : '♡'}</span> ${t.likes}
+            </div>
+            <div class="tw-act" onclick="event.stopPropagation(); showToast('Link copy ho gaya! ◈')">
+              <span class="act-icon">↗</span>
+            </div>
+          </div>
+        </div>
+
+      </article>`;
+  }).join('');
+}
+
+// ──────────────────────────────────────────────────────
+// INTERACTIONS — LIKE / RETWEET
+// ──────────────────────────────────────────────────────
+
+/**
+ * Toggle like state on a tweet
+ * @param {number} id
+ */
+function handleLike(id) {
+  const tweet = tweets.find(t => t.id === id);
+  if (!tweet) return;
+
+  tweet.liked  = !tweet.liked;
+  tweet.likes += tweet.liked ? 1 : -1;
+
+  refreshAll();
+  if (tweet.liked) showToast('Pasand kiya ♥');
+}
+
+/**
+ * Increment retweet count
+ * @param {number} id
+ */
+function handleRT(id) {
+  const tweet = tweets.find(t => t.id === id);
+  if (!tweet) return;
+
+  tweet.rts++;
+  refreshAll();
+  showToast('Retweet ho gaya ⟳');
+}
+
+/** Re-render both feed and profile tweet lists */
+function refreshAll() {
+  renderTweets(tweets, 'feedList');
+  renderProfileTweets();
+}
+
+// ──────────────────────────────────────────────────────
+// COMPOSE
+// ──────────────────────────────────────────────────────
+
+/**
+ * Update character counter ring and enable/disable send button
+ * @param {string} inputId   - textarea element id
+ * @param {string} counterId - counter span id
+ * @param {string} btnId     - send button id
+ */
+function handleCompose(inputId, counterId, btnId) {
+  const val    = document.getElementById(inputId).value;
+  const used   = val.length;
+  const rem    = MAX_CHARS - used;
+  const pct    = used / MAX_CHARS;
+
+  // Counter text
+  const cntEl  = document.getElementById(counterId);
+  cntEl.textContent = rem < 40 ? rem : '';
+  cntEl.className   = 'ring-num' + (rem < 20 ? ' over' : rem < 50 ? ' warn' : '');
+
+  // SVG ring (prefix "feed" or "modal")
+  const prefix    = inputId === 'feedInput' ? 'feed' : 'modal';
+  const circleEl  = document.getElementById(prefix + 'RingCircle');
+  if (circleEl) {
+    const offset = CIRCUMFERENCE * (1 - pct);
+    circleEl.style.strokeDashoffset = offset;
+    circleEl.className = 'ring-fg' + (rem < 20 ? ' over' : rem < 50 ? ' warn' : '');
+  }
+
+  // Send button
+  document.getElementById(btnId).disabled = !val.trim();
+}
+
+/** Post tweet from inline feed compose */
+function postFromFeed() {
+  const val = document.getElementById('feedInput').value.trim();
+  if (!val) return;
+
+  createTweet(val);
+
+  document.getElementById('feedInput').value = '';
+  handleCompose('feedInput', 'feedCounter', 'feedSendBtn');
+}
+
+/** Post tweet from modal compose */
+function postFromModal() {
+  const val = document.getElementById('modalInput').value.trim();
+  if (!val) return;
+
+  createTweet(val);
+
+  document.getElementById('modalInput').value = '';
+  handleCompose('modalInput', 'modalCounter', 'modalSendBtn');
+  closeModal();
+}
+
+/**
+ * Create a new tweet object and prepend to feed
+ * @param {string} text - tweet content
+ */
+function createTweet(text) {
+  const tweet = {
+    id:       nextId++,
+    name:     'Ahmad Ali',
+    handle:   'ahmad_ali',
+    av:       'ع',
+    ci:       0,
+    verified: true,
+    text,
+    time:     'Abhi',
+    likes:    0,
+    liked:    false,
+    rts:      0,
+    replies:  0,
+    img:      null,
+    own:      true,
+  };
+
+  tweets.unshift(tweet);
+  myTweets.unshift(tweet);
+
+  refreshAll();
+  updateProfileStats();
+  showToast('Tweet live ho gaya! ⬡');
+}
+
+// ──────────────────────────────────────────────────────
+// RENDER — TRENDS
+// ──────────────────────────────────────────────────────
+
+/** Render trends into right panel and explore page */
+function renderTrends() {
+
+  // Right panel (compaapp.js.ct rows)
+  document.getElementById('trendList').innerHTML = trends.map(t => `
+    <div class="trend-row">
+      <div class="tr-cat">${t.cat}</div>
+      <div class="tr-tag">${t.tag}</div>
+      <div class="tr-n">${t.n} tweets</div>
+    </div>
+  `).join('');
+
+  // Explore page (cards)
+  const exploreEl = document.getElementById('exploreTrends');
+  if (exploreEl) {
+    exploreEl.innerHTML = trends.map(t => `
+      <div class="trend-card">
+        <div class="tc-cat">${t.cat}</div>
+        <div class="tc-tag">${t.tag}</div>
+        <div class="tc-n">${t.n} tweets</div>
+      </div>
+    `).join('');
+  }
+}
+
+// ──────────────────────────────────────────────────────
+// RENDER — WHO TO FOLLOW
+// ──────────────────────────────────────────────────────
+
+/** Render follow suggestions */
+function renderWho() {
+  document.getElementById('whoList').innerHTML = suggestions.map((s, i) => {
+    const av = avatarStyle(s.ci);
+    return `
+      <div classapp.js.="who-row">
+        <div class="who-av" style="background:${av.bg};color:${av.fg}">${s.av}</div>
+        <div class="who-info">
+          <div class="who-name">${s.name}</div>
+          <div class="who-handle">@${s.handle}</div>
+        </div>
+        <button class="follow-btn${s.following ? ' fapp.js.app.js.ollowing' : ''}" onclick="toggleFollow(${i})">
+          ${s.following ? 'FOLLOWING' : 'FOLLOW'}
+        </button>
+      </div>`;
+  }).join('');
+}
+
+/**
+ * Toggle follow/unfollow
+ * @param {number} i - index in suggestions array
+ */
+function toggleFollow(i) {
+  suggestions[i].following = !suggestions[i].following;
+  renderWho();
+  showToast(
+    suggestions[i].following
+      ? `@${suggestions[i].handle} ko follow kiya ✓`
+      : 'Unfollow ho gaya'
+  );
+}
+
+// ──────────────────────────────────────────────────────
+// PROFILE
+// ──────────────────────────────────────────────────────
+
+/** Render only the current user's own tweets on the profile page */
+function renderProfileTweets() {
+  const own = tweets.filter(t => t.own);
+  renderTweets(owapp.js.n, 'profFeed');
+}
+
+/** Update tweet count and other stats shown on profile */
+function updateProfileStats() {
+  const count = tweets.filter(t => t.own).length;
+  const el    = document.getElementById('profTweetCount');
+  if (el) el.textContent = count;
+}
+
+// ──────────────────────────────────────────────────────
+// PAGE NAVIGATION
+// ──────────────────────────────────────────────────────
+
+/**
+ * Switch the visible page
+ * @param {string} page - 'feed' | 'explore' | 'profile'
+ */
+function showPage(page) {
+  // Hide all pages
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+
+  const target = document.getElementById('page-' + page);
+  if (target) target.classList.add('active');
+
+  // Update nav active state
+  document.querySelectorAll('.nav-item').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.page === page);
+  });
+
+  // Page-specific init
+  if (page === 'profile') {
+    renderProfileTweets();
+    updateProfileStats();
+  }
+}
+
+/**
+ * Switch active tab within a header tab bar
+ * @param {HTMLElement} el - the clicked tab element
+ */
+function switchHTab(el) {
+  const parent = el.closest('.header-tabs');
+  parent.querySelectorAll('.htab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ──────────────────────────────────────────────────────
+// MODAL
+// ──────────────────────────────────────────────────────
+
+/** Open the compose modal */
+function openModal() {
+  document.getElementById('modalOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('modalInput').focus(), 180);
+}
+
+/** Close the compose modal */
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+
+/**
+ * Close modal when clicking the dark overlay background
+ * @param {MouseEvent} e
+ */
+function overlayClick(e) {
+  if (e.target.id === 'modalOverlay') closeModal();
+}
+
+// ──────────────────────────────────────────────────────
+// TOAST
+// ──────────────────────────────────────────────────────
+
+let _toastTimer;
+
+/**
+ * Show a brief notification toast
+ * @param {string} msg
+ */
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+// ──────────────────────────────────────────────────────
+// CURSOR GLOW
+// ──────────────────────────────────────────────────────
+
+(function initCursorGlow() {
+  const glow = document.getElementById('cursorGlow');
+  if (!glow) return;
+
+  document.addEventListener('mousemove', e => {
+    glow.style.left = e.clientX + 'px';
+    glow.style.top  = e.clientY + 'px';
+  });
+})();
+
+// ──────────────────────────────────────────────────────
+// KEYBOARD SHORTCUTS
+// ──────────────────────────────────────────────────────
+
+document.addEventListener('keydown', e => {
+  const isModalOpen = document.getElementById('modalOverlay').classList.contains('open');
+
+  // Escape — close modal
+  if (e.key === 'Escape' && isModalOpen) {
+    closeModal();
+    return;
+  }
+
+  // Ctrl/Cmd + N — open compose modal
+  if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+    e.preventDefault();
+    openModal();
+    return;
+  }
+
+  // Ctrl/Cmd + Enter — submit active compose
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    if (isModalOpen) postFromModal();
+    else             postFromFeed();
+    return;
+  }
+
+  // G + F — go to feed
+  if (e.key === 'f' && !isModalOpen && document.activeElement.tagName !== 'TEXTAREA') {
+    showPage('feed');
+  }
+  // G + P — go to profile
+  if (e.key === 'p' && !isModalOpen && document.activeElement.tagName !== 'TEXTAREA') {
+    showPage('profile');
+  }
+  // G + E — go to explore
+  if (e.key === 'e' && !isModalOpen && document.activeElement.tagName !== 'TEXTAREA') {
+    showPage('explore');
+  }
+});
+
+// ──────────────────────────────────────────────────────
+// INIT — runs on page load
+// ──────────────────────────────────────────────────────
+
+(function init() {
+  renderTweets(tweets, 'feedList');
+  renderTrends();
+  renderWho();
+  renderProfileTweets();
+  updateProfileStats();
+
+  console.log('%c BOLO — App Ready ', 'background:#e8ff00;color:#080808;font-weight:bold;padding:4px 8px;');
+  console.log('%c Shortcuts: Ctrl+N (new post) · Ctrl+Enter (send) · f/p/e (navigate) ',
+    'color:#666;font-size:11px;');
+})();
