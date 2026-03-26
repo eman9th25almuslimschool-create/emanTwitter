@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="ur">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>گفتگو — Guftagu</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Noto+Nastaliq+Urdu:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:b
+:root {
+  --bg: #050507;
+  --bg2: #0c0c10;
+  --bg3: #111117;
+lahoremeintreding  --surface: #16161e;
+  --surface2: #1c1c26;
+  --border: #ffffff0f;
+  --border2: #ffffff18;
+  --text: #f0eeff;
+  --text2: #9090b0;
+  --text3: #555570;
+  --accent: #7c5cfc;
+  --accent2: #9d7fff;
+  --accent-glow: #7c5cfc44;
+  --pink: #fc5c8a;
+  --pink-glow: #fc5c8a33;
+  --green: #3ddc84;
+  --green-glow: #3ddc8433;
+  --gold: #ffc857;
+  --r: 16px;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Syne', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  cursor: default;
+}
+
+/* NOISE OVERLAY */
+body::after {
+  content: '';
+  position: fixed;
+lahoremeintreding  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 999;
+  opacity: 0.4;
+}
+
+/* AMBIENT GLOW */
+.glow-orb {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  z-index: 0;
+}
+.orb1 { width: 400px; height: 400px; background: var(--accent-glow); top: -100px; left: -100px; }
+.orb2 { width: 300px; height: 300px; background: var(--pink-glow); bottom: -50px; right: 200px; }
+.orb3 { width: 200px; height: 200px; background: #3ddc8422; top: 40%; right: -50px; }
+
+/* LAYOUT */
+.shell {
+  display: grid;
+  grid-template-columns: 72px 1fr 300px;
+  max-width: 1100px;
+  margin: 0 auto;
+  min-height: 100vh;
+lahoremeintreding  position: relative;
+  z-index: 1;
+}
+
+/* LEFT NAV */
+.leftnav {
+  padding: 20px 12px;
+  border-right: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: cen
+
+.brand {
+  width: 44px; height: 44px;
+  background: linear-gradient(135deg, var(--accent), var(--pink));
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 0 20px var(--accent-glow);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.brand:hover { transform: scale(1.05); box-shadow: 0 0 30px var(--accent-glow); }
+
+.nav-btn {
+  width: 48px; height: 48px;
+  border-radius: 14px;
+  border: none;
+  background: transparent;
+  color: var(--text2);
+  font-size: 20px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+  position: relative;
+}
+.nav-btn:hover { background: var(--surface); color: var(--text); }
+.nav-btn.active {
+  background: linear-gradient(135deg, var(--accent)22, var(--accent)11);
+  color: var(--accent2);
+  box-shadow: inset 0 0 0 1px var(--accent)44;
+}
+.nav-btn .badge {
+  position: absolute;
+  top: 6px; right: 6px;
+  width: 8px; height: 8px;
+  background: var(--pink);
+  border-radius: 50%;
+  border: 2px solid var(--bg);
+}
+
+.compose-fab {
+  margin-top: auto;
+  width: 48px; height: 48px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--accent), var(--pink));
+  border: none;
+  color: white;
+  font-size: 22px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.25s;
+  box-shadow: 0 4px 20px var(--accent-glow);
+}
+.compose-fab:hover { transform: translateY(-2px) scale(1.05); box-shadow: 0 8px 30px var(--accent-glow); }
+
+.user-nav-avatar {
+  margin-top: 12px;
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7c5cfc, #fc5c8a);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800;
+  font-size: 14px;
+  cursor: pointer;
+  border: 2px solid var(--border2);
+  transition: border-color 0.2s;
+}
+.user-nav-avatar:hover { border-color: var(--accent); }
+
+/* MAIN */
+.main {
+  border-right: 1px solid var(--border);
+  min-height: 100vh;
+  max-height: 100vh;
+  overflow-y: auto;
+}
+.main::-webkit-scrollbar { width: 3px; }
+.main::-webkit-scrollbar-track { background: transparent; }
+.main::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+/* FEED HEADER */
+.feed-head {
+  position: sticky; top: 0; z-index: 10;
+  background: #050507cc;
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 0;
+}
+.feed-head-top { padding: 18px 20px 0; }
+.feed-head h1 {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+.tabs {
+  display: flex;
+  margin-top: 14px;
+}
+.tab {
+  flex: 1;
+  padding: 12px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text3);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+  letter-spacing: 0.3px;
+}
+.tab:hover { color: var(--text2); background: var(--border); }
+.tab.active { color: var(--text); border-color: var(--accent); }
+
+/* COMPOSE */
+.compose {
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 12px;
+  background: var(--bg2);
+}
+.c-avatar {
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--pink));
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800;
+  font-size: 16px;
+  flex-shrink: 0;
+  box-shadow: 0 0 12px var(--accent-glow);
+}
+.compose-inner { flex: 1; }
+.compose-ta {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-family: 'Syne', sans-serif;
+  font-size: 16px;
+  resize: none;
+  min-height: 70px;
+  line-height: 1.6;
+}
+.compose-ta::placeholder { color: var(--text3); }
+.compose-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.c-tools { display: flex; gap: 4px; }
+.c-tool {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--accent2);
+  font-size: 15px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s;
+}
+.c-tool:hover { background: var(--accent)22; }
+.c-right { display: flex; align-items: center; gap: 10px; }
+.c-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--text3);
+}
+.c-count.warn { color: var(--gold); }
+.c-count.over { color: var(--pink); }
+.send-btn {
+  padding: 8px 20px;
+  background: linear-gradient(135deg, var(--accent), #9d5cfc);
+  border: none;
+  border-radius: 20px;
+  color: white;
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.3px;
+  box-shadow: 0 4px 15px var(--accent-glow);
+}
+.send-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 22px var(--accent-glow); }
+.send-btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; box-shadow: none; }
+
+/* TWEET CARD */
+.tweet {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 12px;
+  cursor: pointer;
+  transition: background 0.15s;
+  animation: tweetIn 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+  position: relative;
+}
+@keyframes tweetIn {
+  from { opacity: 0; transform: translateY(-16px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.tweet::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--accent)04, transparent);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.tweet:hover::before { opacity: 1; }
+.tweet:hover { background: var(--bg2); }
+
+.t-avatar {
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800;
+  font-size: 16px;
+  position: relative;
+}
+.t-avatar.verified::after {
+  content: '✓';
+  position: absolute;
+  bottom: -2px; right: -2px;
+  width: 16px; height: 16px;
+  background: var(--accent);
+  border-radius: 50%;
+  border: 2px solid var(--bg);
+  font-size: 8px;
+  display: flex; align-items: center; justify-content: center;
+  color: white;
+}
+
+.t-body { flex: 1; min-width: 0; }
+.t-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+.t-name { font-size: 14px; font-weight: 700; }
+.t-handle { font-size: 13px; color: var(--text3); }
+.t-dot { color: var(--text3); font-size: 12px; }
+.t-time { font-size: 12px; color: var(--text3); font-family: 'JetBrains Mono', monospace; }
+
+.t-text {
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--text);
+  margin-bottom: 14px;
+  word-break: break-word;
+}
+.t-text .tag { color: var(--accent2); font-weight: 600; }
+.t-text .mention { color: var(--pink); }
+
+/* IMAGE CARD */
+.t-img-card {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  margin-bottom: 14px;
+  background: var(--surface);
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+}
+
+/* ACTIONS */
+.t-actions {
+  display: flex;
+  gap: 20px;
+}
+.t-act {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  color: var(--text3);
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 4px 6px;
+  border-radius: 8px;
+  user-select: none;
+}
+.t-act:hover { background: var(--surface); }
+.t-act.reply:hover { color: var(--accent2); }
+.t-act.rt:hover { color: var(--green); }
+.t-act.like:hover { color: var(--pink); }
+.t-act.like.liked { color: var(--pink); }
+.t-act.like.liked .t-icon { animation: likeBoom 0.4s cubic-bezier(0.34,1.56,0.64,1); }
+@keyframes likeBoom {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.6); }
+  100% { transform: scale(1); }
+}
+.t-act.bm:hover { color: var(--gold); }
+.t-num { font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+
+/* DIVIDER LABEL */
+.feed-divider {
+  padding: 10px 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--text3);
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+
+/* RIGHT SIDEBAR */
+.rightsidebar {
+  padding: 18px 16px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.rightsidebar::-webkit-scrollbar { display: none; }
+
+.search-wrap { position: relative; }
+.search-wrap input {
+  width: 100%;
+  padding: 10px 14px 10px 38px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--text);
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  outline: none;
+  transition: all 0.2s;
+}
+.search-wrap input:focus { border-color: var(--accent); background: var(--surface2); box-shadow: 0 0 0 3px var(--accent-glow); }
+.search-wrap input::placeholder { color: var(--text3); }
+.search-ico { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text3); font-size: 14px; }
+
+.widget {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+}
+.widget-head {
+  padding: 14px 16px 10px;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  border-bottom: 1px solid var(--border);
+}
+
+.trend-row {
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: background 0.15s;
+  border-bottom: 1px solid var(--border);
+}
+.trend-row:last-child { border-bottom: none; }
+.trend-row:hover { background: var(--surface2); }
+.trend-cat { font-size: 11px; color: var(--text3); margin-bottom: 1px; }
+.trend-tag { font-size: 14px; font-weight: 700; color: var(--text); }
+.trend-count { font-size: 11px; color: var(--text3); margin-top: 1px; font-family: 'JetBrains Mono', monospace; }
+
+.who-row {
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.who-row:last-child { border-bottom: none; }
+.who-av {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  font-size: 14px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  color: white;
+}
+.who-info { flex: 1; }
+.who-name { font-size: 13px; font-weight: 700; }
+.who-handle { font-size: 11px; color: var(--text3); }
+.follow-btn {
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Syne', sans-serif;
+  transition: all 0.2s;
+  border: 1px solid var(--border2);
+  background: transparent;
+  color: var(--text);
+  flex-shrink: 0;
+}
+.follow-btn:hover { border-color: var(--accent); color: var(--accent2); background: var(--accent)11; }
+.follow-btn.ing { border-color: var(--border); color: var(--text3); }
+.follow-btn.ing:hover { border-color: var(--pink); color: var(--pink); background: var(--pink-glow); }
+
+/* PROFILE PAGE */
+#page-profile { display: none; }
+.prof-banner {
+  height: 160px;
+  background: linear-gradient(135deg, #1a0a3c 0%, #0c0c10 40%, #1a0035 100%);
+  position: relative;
+  overflow: hidden;
+}
+.prof-banner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 30% 60%, var(--accent-glow), transparent 60%),
+              radial-gradient(ellipse at 80% 30%, var(--pink-glow), transparent 50%);
+}
+.prof-banner-grid {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(var(--border) 1px, transparent 1px),
+                    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 40px 40px;
+  opacity: 0.3;
+}
+
+.prof-info-wrap { padding: 0 20px 20px; }
+.prof-av-row { display: flex; justify-content: space-between; align-items: flex-end; margin-top: -28px; margin-bottom: 14px; }
+.prof-av-big {
+  width: 76px; height: 76px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--pink));
+  border: 3px solid var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; font-weight: 800;
+  box-shadow: 0 0 24px var(--accent-glow);
+}
+.edit-prof-btn {
+  padding: 8px 18px;
+  border-radius: 20px;
+  border: 1px solid var(--border2);
+  background: transparent;
+  color: var(--text);
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.edit-prof-btn:hover { border-color: var(--accent); background: var(--accent)11; }
+
+.prof-name { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
+.prof-handle { font-size: 14px; color: var(--text3); margin-bottom: 10px; }
+.prof-bio { font-size: 14px; line-height: 1.6; margin-bottom: 12px; color: var(--text2); }
+.prof-meta { display: flex; gap: 16px; font-size: 13px; color: var(--text3); margin-bottom: 16px; flex-wrap: wrap; }
+.prof-stats { display: flex; gap: 20px; }
+.prof-stat { cursor: pointer; }
+.prof-stat:hover .pstat-num { color: var(--accent2); }
+.pstat-num { font-size: 16px; font-weight: 800; display: block; }
+.pstat-label { font-size: 12px; color: var(--text3); }
+
+.prof-tabs { display: flex; border-bottom: 1px solid var(--border); }
+.prof-tab {
+  flex: 1; padding: 14px; text-align: center;
+  font-size: 13px; font-weight: 700;
+  color: var(--text3); cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+  letter-spacing: 0.5px;
+}
+.prof-tab:hover { color: var(--text2); }
+.prof-tab.active { color: var(--text); border-color: var(--accent); }
+
+.empty-state {
+  padding: 60px 24px;
+  text-align: center;
+  color: var(--text3);
+}
+.empty-icon { font-size: 48px; margin-bottom: 14px; opacity: 0.5; }
+.empty-title { font-size: 18px; font-weight: 800; margin-bottom: 6px; color: var(--text2); }
+.empty-sub { font-size: 14px; line-height: 1.5; }
+
+/* MODAL */
+.modal-bg {
+  display: none;
+  position: fixed; inset: 0;
+  background: #000000cc;
+  backdrop-filter: blur(8px);
+  z-index: 500;
+  align-items: center; justify-content: center;
+}
+.modal-bg.on { display: flex; }
+.modal-box {
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: 20px;
+  width: 560px; max-width: 95vw;
+  padding: 24px;
+  position: relative;
+  animation: modalPop 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  box-shadow: 0 24px 80px #00000088;
+}
+@keyframes modalPop {
+  from { opacity: 0; transform: scale(0.9) translateY(20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.modal-x {
+  position: absolute; top: 14px; right: 14px;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.modal-x:hover { background: var(--surface2); color: var(--text); }
+.modal-title { font-size: 16px; font-weight: 800; margin-bottom: 16px; }
+.modal-ta {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  color: var(--text);
+  font-family: 'Syne', sans-serif;
+  font-size: 16px;
+  resize: none;
+  outline: none;
+  min-height: 120px;
+  line-height: 1.6;
+  transition: border-color 0.2s;
+}
+.modal-ta:focus { border-color: var(--accent); }
+.modal-ta::placeholder { color: var(--text3); }
+.modal-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; }
+
+/* TOAST */
+.toast {
+  position: fixed;
+  bottom: 28px; left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  padding: 12px 22px;
+  border-radius: 24px;
+  font-size: 14px;
+  font-weight: 600;
+  z-index: 1000;
+  transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  white-space: nowrap;
+  box-shadow: 0 8px 30px #00000066;
+  backdrop-filter: blur(10px);
+}
+.toast.on { transform: translateX(-50%) translateY(0); }
+
+/* LOADING PULSE */
+.skeleton {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex; gap: 12px;
+}
+.skel-av { width: 42px; height: 42px; border-radius: 50%; background: var(--surface); animation: pulse 1.5s infinite; flex-shrink: 0; }
+.skel-body { flex: 1; display: flex; flex-direction: column; gap: 8px; padding-top: 4px; }
+.skel-line { height: 12px; background: var(--surface); border-radius: 6px; animation: pulse 1.5s infinite; }
+@keyframes pulse { 0%,100%{opacity:0.4} 50%{opacity:0.8} }
+
+/* PAGE */
+.page { display: none; }
+.page.on { display: block; animation: fadeUp 0.25s ease; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+@media(max-width:768px){
+  .shell{grid-template-columns:62px 1fr}
+  .rightsidebar{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- AMBIENT -->
+<div class="glow-orb orb1"></div>
+<div class="glow-orb orb2"></div>
+<div class="glow-orb orb3"></div>
+
+<div class="shell">
+
+  <!-- LEFT NAV -->
+  <nav class="leftnav">
+    <div class="brand" onclick="showPage('feed')" title="Guftagu">گ</div>
+
+    <button class="nav-btn active" onclick="showPage('feed')" title="Home">🏠</button>
+    <button class="nav-btn" onclick="showPage('explore')" title="Talash">🔍</button>
+    <button class="nav-btn" title="Notifications">
+      🔔
+      <span class="badge"></span>
+    </button>
+    <button class="nav-btn" title="Messages">💬</button>
+    <button class="nav-btn" onclick="showPage('profile')" title="Profile">👤</button>
+    <button class="nav-btn" title="Bookmarks">🔖</button>
+
+    <button class="compose-fab" onclick="openModal()" title="Naya Tweet (Ctrl+N)">＋</button>
+    <div class="user-nav-avatar" onclick="showPage('profile')">ع</div>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main" id="mainArea">
+
+    <!-- FEED -->
+    <div class="page on" id="page-feed">
+      <div class="feed-head">
+        <div class="feed-head-top">
+          <h1>Home</h1>
+        </div>
+        <div class="tabs">
+          <div class="tab active" onclick="switchTab(this,'for-you')">Aap Ke Liye</div>
+          <div class="tab" onclick="switchTab(this,'following')">Following</div>
+          <div class="tab" onclick="switchTab(this,'trending')">Trending</div>
+        </div>
+      </div>
+
+      <!-- COMPOSE -->
+      <div class="compose">
+        <div class="c-avatar">ع</div>
+        <div class="compose-inner">
+          <textarea class="compose-ta" id="feedTa" placeholder="Kya ho raha hai?" maxlength="280" oninput="onCompose()"></textarea>
+          <div class="compose-bar">
+            <div class="c-tools">
+              <button class="c-tool" title="Tasveer">🖼️</button>
+              <button class="c-tool" title="GIF">🎬</button>
+              <button class="c-tool" title="Poll">📊</button>
+              <button class="c-tool" title="Emoji">😊</button>
+              <button class="c-tool" title="Location">📍</button>
+            </div>
+            <div class="c-right">
+              <span class="c-count" id="feedCount">280</span>
+              <button class="send-btn" id="feedPostBtn" onclick="postFromFeed()" disabled>Post</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="feed-divider">Live Feed</div>
+      <div id="tweetList"></div>
+    </div>
+
+    <!-- EXPLORE -->
+    <div class="page" id="page-explore">
+      <div class="feed-head">
+        <div class="feed-head-top" style="padding-bottom:16px">
+          <h1>Talash کریں</h1>
+          <div style="position:relative;margin-top:12px">
+            <span class="search-ico">🔍</span>
+            <input type="text" placeholder="Kuch bhi dhoondein…" style="width:100%;padding:10px 14px 10px 36px;background:var(--surface);border:1px solid var(--border);border-radius:12px;color:var(--text);font-family:'Syne',sans-serif;font-size:14px;outline:none" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+          </div>
+        </div>
+      </div>
+      <div style="padding:20px">
+        <p style="font-size:11px;font-weight:700;letter-spacing:2px;color:var(--text3);text-transform:uppercase;margin-bottom:14px">Pakistan Mein Trend Ho Raha Hai</p>
+        <div id="exploreGrid"></div>
+      </div>
+    </div>
+
+    <!-- PROFILE -->
+    <div class="page" id="page-profile">
+      <div class="feed-head" style="border-bottom:none">
+        <div class="feed-head-top" style="padding-bottom:14px;display:flex;align-items:center;gap:14px">
+          <button onclick="showPage('feed')" style="background:var(--surface);border:1px solid var(--border);border-radius:50%;width:32px;height:32px;color:var(--text);cursor:pointer;font-size:14px">←</button>
+          <div>
+            <div style="font-size:16px;font-weight:800">Ahmad Ali</div>
+            <div style="font-size:12px;color:var(--text3);font-family:'JetBrains Mono',monospace" id="profTweetCount">0 tweets</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="prof-banner">
+        <div class="prof-banner-grid"></div>
+      </div>
+      <div class="prof-info-wrap">
+        <div class="prof-av-row">
+          <div class="prof-av-big">ع</div>
+          <button class="edit-prof-btn">Profile Edit Karein</button>
+        </div>
+        <div class="prof-name">Ahmad Ali</div>
+        <div class="prof-handle">@ahmad_ali</div>
+        <div class="prof-bio">Lahore se hoon 🇵🇰 · Likhna aur sochna pasand hai · Chai &amp; Code ☕ · Urdu adab ka dildada</div>
+        <div class="prof-meta">
+          <span>📅 March 2024 se member</span>
+          <span>📍 Lahore, Pakistan</span>
+          <span>🔗 guftagu.pk/ahmad</span>
+        </div>
+        <div class="prof-stats">
+          <div class="prof-stat">
+            <span class="pstat-num">142</span>
+            <span class="pstat-label">Following</span>
+          </div>
+          <div class="prof-stat">
+            <span class="pstat-num" id="profFollowers">893</span>
+            <span class="pstat-label">Followers</span>
+          </div>
+        </div>
+      </div>
+      <div class="prof-tabs">
+        <div class="prof-tab active">Tweets</div>
+        <div class="prof-tab">Replies</div>
+        <div class="prof-tab">Media</div>
+        <div class="prof-tab">Likes</div>
+      </div>
+      <div id="profFeed"></div>
+    </div>
+
+  </main>
+
+  <!-- RIGHT -->
+  <aside class="rightsidebar">
+    <div class="search-wrap">
+      <span class="search-ico">🔍</span>
+      <input type="text" placeholder="Guftagu mein dhoondein…">
+    </div>
+
+    <div class="widget">
+      <div class="widget-head">🔥 Trending Pakistan</div>
+      <div id="trendList"></div>
+    </div>
+
+    <div class="widget">
+      <div class="widget-head">✨ Logon Ko Follow Karein</div>
+      <div id="whoToFollow"></div>
+    </div>
+
+    <div style="padding:12px 16px;font-size:11px;color:var(--text3);line-height:1.8">
+      Privacy · Terms · Accessibility<br>
+      © 2026 Guftagu by <span style="color:var(--accent2)">@ahmad_ali</span>
+    </div>
+  </aside>
+</div>
+
+<!-- MODAL -->
+<div class="modal-bg" id="modalBg" onclick="clickOutModal(event)">
+  <div class="modal-box">
+    <button class="modal-x" onclick="closeModal()">✕</button>
+    <div class="modal-title">Naya Tweet Likhein ✍️</div>
+    <div style="display:flex;gap:12px">
+      <div class="c-avatar" style="flex-shrink:0">ع</div>
+      <div style="flex:1">
+        <textarea class="modal-ta" id="modalTa" placeholder="Kya ho raha hai Pakistan mein?" maxlength="280" oninput="onModalCompose()"></textarea>
+        <div class="modal-foot">
+          <div class="c-tools">
+            <button class="c-tool">🖼️</button>
+            <button class="c-tool">😊</button>
+            <button class="c-tool">📊</button>
+            <button class="c-tool">📍</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span class="c-count" id="modalCount">280</span>
+            <button class="send-btn" id="modalPostBtn" onclick="postFromModal()" disabled>Post Karein</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ──── DATA ────
+const G = [
+  'linear-gradient(135deg,#7c5cfc,#c05cfc)',
+  'linear-gradient(135deg,#fc5c8a,#fc5c5c)',
+  'linear-gradient(135deg,#3ddc84,#1aa85c)',
+  'linear-gradient(135deg,#ffc857,#fc8a5c)',
+  'linear-gradient(135deg,#5cf0fc,#5c8afc)',
+  'linear-gradient(135deg,#fc5cf0,#7c5cfc)',
+  'linear-gradient(135deg,#84dc3d,#3d9cdc)',
+];
+
+let tweets = [
+  {id:1,name:'Fatima Noor',handle:'fatima_noor',av:'ف',g:0,verified:true,text:'Lahore ki sardi mein chai ka cup — duniya ki sab se perfect cheez ☕❄️ koi mujhe contradict nahi kar sakta #LahoreWinter',time:'2m',likes:247,liked:false,rts:34,replies:19,img:'☕'},
+  {id:2,name:'Bilal Ahmed',handle:'bilal_codes',av:'ب',g:2,verified:false,text:'Kal raat 3 baje tak code karta raha, aur aaj production mein bug — classic 😭\n\nSabq: jo raat ko theek lagta hai woh subah broken hota hai #DevLife #Pakistan',time:'8m',likes:891,liked:false,rts:156,replies:77,img:null},
+  {id:3,name:'Zara Hussain',handle:'zara_writes',av:'ز',g:5,verified:true,text:'Faiz Ahmad Faiz ne likha tha:\n"Hum dekhenge"\n\nAaj bhi yeh lafz utne hi taaqatwar hain. Urdu adab ki baat hi alag hai 📖✨ #UrduShayari',time:'15m',likes:1203,liked:false,rts:445,replies:88,img:null},
+  {id:4,name:'Hamza Dev',handle:'hamza_pk',av:'ح',g:3,verified:true,text:'Meri pehli open source PR merge ho gayi 🎉🎉🎉\n\nChota sa contribution tha lekin khushi bohot bari hai. @github community ka shukriya ❤️ #OpenSource #PakistaniDevelopers',time:'23m',likes:2341,liked:false,rts:678,replies:143,img:'🎉'},
+  {id:5,name:'Sana Rizvi',handle:'sana_r',av:'س',g:1,verified:false,text:'Islamabad mein aaj cherry blossoms khil gaye! Margalla ke saath — yeh manzar dekh ke dil khush ho gaya 🌸🏔️\n\n#Islamabad #Spring #Beautiful',time:'31m',likes:567,liked:false,rts:123,replies:42,img:'🌸'},
+  {id:6,name:'Usman Qureshi',handle:'usman_q',av:'ع',g:4,verified:false,text:'PSL 2026 shuru hone wala hai!! 🏏🔥\n\nIs baar Lahore Qalandars ki championship pakki hai InshaAllah. Kaun agree karta hai? 👇\n\n#PSL2026 #CricketPakistan',time:'45m',likes:3456,liked:false,rts:987,replies:334,img:'🏏'},
+  {id:7,name:'Aisha Khan',handle:'aisha_dev',av:'ع',g:6,verified:true,text:'Pakistan mein tech startups ki taadaad 2024 mein 3x ho gayi! 🚀\n\nYeh dekh ke dil khush hota hai. Hamara nojawan Pakistan badal raha hai 💪 #PakistanTech #Startup',time:'1h',likes:1876,liked:false,rts:543,replies:91,img:null},
+];
+
+let myTweets = [];
+let nextId = 100;
+
+const trends = [
+  {cat:'Pakistan · Trending',tag:'#PSL2026',n:'67.2K'},
+  {cat:'Lahore mein Trending',tag:'#LahoreWinter',n:'14.8K'},
+  {cat:'Technology',tag:'#PakistaniDevelopers',n:'9.3K'},
+  {cat:'Sports · Cricket',tag:'#CricketPakistan',n:'89.1K'},
+  {cat:'Entertainment',tag:'#UrduShayari',n:'31.4K'},
+  {cat:'Trending',tag:'#Islamabad',n:'22.7K'},
+];
+
+const suggestions = [
+  {name:'Imran Noor',handle:'imran_tech',av:'ا',g:0,following:false},
+  {name:'Hira Baig',handle:'hira_art',av:'ہ',g:5,following:false},
+  {name:'Ali Raza',handle:'ali_dev',av:'ع',g:2,following:false},
+  {name:'Mehreen Anwar',handle:'mehreen_w',av:'م',g:1,following:false},
+];
+
+// ──── RENDER TWEETS ────
+function renderTweets(list, containerId) {
+  const el = document.getElementById(containerId);
+  if (!list.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🕊️</div><div class="empty-title">Abhi koi tweet nahi</div><div class="empty-sub">Pehle tweet likhein aur apne khayalat share karein!</div></div>`;
+    return;
+  }
+  el.innerHTML = list.map((t,i) => `
+    <div class="tweet" style="animation-delay:${Math.min(i*0.06,0.4)}s">
+      <div class="t-avatar${t.verified?' verified':''}" style="background:${G[t.g]}">${t.av}</div>
+      <div class="t-body">
+        <div class="t-top">
+          <span class="t-name">${t.name}</span>
+          <span class="t-handle">@${t.handle}</span>
+          <span class="t-dot">·</span>
+          <span class="t-time">${t.time}</span>
+        </div>
+        <div class="t-text">${fmt(t.text)}</div>
+        ${t.img ? `<div class="t-img-card">${t.img}</div>` : ''}
+        <div class="t-actions">
+          <div class="t-act reply" onclick="event.stopPropagation();toast('Reply jald aa raha hai! 🔜')">
+            <span class="t-icon">💬</span><span class="t-num">${t.replies}</span>
+          </div>
+          <div class="t-act rt" onclick="event.stopPropagation();doRT(${t.id})">
+            <span class="t-icon">🔁</span><span class="t-num">${t.rts}</span>
+          </div>
+          <div class="t-act like${t.liked?' liked':''}" onclick="event.stopPropagation();doLike(${t.id})">
+            <span class="t-icon">${t.liked?'❤️':'🤍'}</span><span class="t-num">${t.likes}</span>
+          </div>
+          <div class="t-act bm" onclick="event.stopPropagation();toast('Bookmark ho gaya! 🔖')">
+            <span class="t-icon">🔖</span>
+          </div>
+          <div class="t-act" onclick="event.stopPropagation();toast('Link copy ho gaya! 📋')">
+            <span class="t-icon">📤</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function fmt(text) {
+  return text
+    .replace(/\n/g,'<br>')
+    .replace(/#(\w+)/g,'<span class="tag">#$1</span>')
+    .replace(/@(\w+)/g,'<span class="mention">@$1</span>');
+}
+
+function doLike(id) {
+  const t = tweets.find(x=>x.id===id) || myTweets.find(x=>x.id===id);
+  if(!t) return;
+  t.liked = !t.liked;
+  t.likes += t.liked ? 1 : -1;
+  refresh();
+  if(t.liked) toast('Pasand kiya ❤️');
+}
+
+function doRT(id) {
+  const t = tweets.find(x=>x.id===id) || myTweets.find(x=>x.id===id);
+  if(!t) return;
+  t.rts++;
+  refresh();
+  toast('Retweet ho gaya! 🔁');
+}
+
+function refresh() {
+  renderTweets(tweets, 'tweetList');
+  renderProfileFeed();
+}
+
+// ──── COMPOSE ────
+function onCompose() {
+  const v = document.getElementById('feedTa').value;
+  updateCount('feedCount', v.length);
+  document.getElementById('feedPostBtn').disabled = !v.trim();
+}
+
+function onModalCompose() {
+  const v = document.getElementById('modalTa').value;
+  updateCount('modalCount', v.length);
+  document.getElementById('modalPostBtn').disabled = !v.trim();
+}
+
+function updateCount(id, len) {
+  const el = document.getElementById(id);
+  const rem = 280 - len;
+  el.textContent = rem;
+  el.className = 'c-count' + (rem < 20 ? ' over' : rem < 50 ? ' warn' : '');
+}
+
+function postFromFeed() {
+  const v = document.getElementById('feedTa').value.trim();
+  if(!v) return;
+  addTweet(v);
+  document.getElementById('feedTa').value = '';
+  onCompose();
+}
+
+function postFromModal() {
+  const v = document.getElementById('modalTa').value.trim();
+  if(!v) return;
+  addTweet(v);
+  document.getElementById('modalTa').value = '';
+  onModalCompose();
+  closeModal();
+}
+
+function addTweet(text) {
+  const t = {
+    id: nextId++,
+    name:'Ahmad Ali', handle:'ahmad_ali', av:'ع', g:0, verified:true,
+    text, time:'Abhi', likes:0, liked:false, rts:0, replies:0, img:null, isOwn:true,
+  };
+  tweets.unshift(t);
+  myTweets.unshift(t);
+  refresh();
+  updateProfCount();
+  toast('Tweet post ho gaya! 🚀');
+}
+
+// ──── TRENDS ────
+function renderTrends() {
+  document.getElementById('trendList').innerHTML = trends.map(t=>`
+    <div class="trend-row">
+      <div class="trend-cat">${t.cat}</div>
+      <div class="trend-tag">${t.tag}</div>
+      <div class="trend-count">${t.n} tweets</div>
+    </div>
+  `).join('');
+
+  document.getElementById('exploreGrid').innerHTML = trends.map(t=>`
+    <div class="trend-row" style="border:1px solid var(--border);border-radius:12px;margin-bottom:8px;padding:14px 16px">
+      <div class="trend-cat">${t.cat}</div>
+      <div class="trend-tag" style="font-size:16px">${t.tag}</div>
+      <div class="trend-count">${t.n} tweets</div>
+    </div>
+  `).join('');
+}
+
+function renderWho() {
+  document.getElementById('whoToFollow').innerHTML = suggestions.map((s,i)=>`
+    <div class="who-row">
+      <div class="who-av" style="background:${G[s.g]}">${s.av}</div>
+      <div class="who-info">
+        <div class="who-name">${s.name}</div>
+        <div class="who-handle">@${s.handle}</div>
+      </div>
+      <button class="follow-btn${s.following?' ing':''}" onclick="toggleFollow(${i})">${s.following?'Following':'Follow'}</button>
+    </div>
+  `).join('');
+}
+
+function toggleFollow(i) {
+  suggestions[i].following = !suggestions[i].following;
+  renderWho();
+  toast(suggestions[i].following ? `@${suggestions[i].handle} ko follow kar liya ✅` : 'Unfollow ho gaya');
+}
+
+// ──── PROFILE ────
+function renderProfileFeed() {
+  const own = tweets.filter(t=>t.isOwn);
+  const el = document.getElementById('profFeed');
+  if(!own.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">✍️</div><div class="empty-title">Abhi koi tweet nahi!</div><div class="empty-sub">Apne khayalat share karein — duniya sun rahi hai 🌍</div></div>`;
+    return;
+  }
+  el.innerHTML = own.map((t,i)=>`
+    <div class="tweet" style="animation-delay:${i*0.05}s">
+      <div class="t-avatar verified" style="background:${G[t.g]}">${t.av}</div>
+      <div class="t-body">
+        <div class="t-top">
+          <span class="t-name">${t.name}</span>
+          <span class="t-handle">@${t.handle}</span>
+          <span class="t-dot">·</span>
+          <span class="t-time">${t.time}</span>
+        </div>
+        <div class="t-text">${fmt(t.text)}</div>
+        <div class="t-actions">
+          <div class="t-act reply"><span>💬</span><span class="t-num">${t.replies}</span></div>
+          <div class="t-act rt" onclick="doRT(${t.id})"><span>🔁</span><span class="t-num">${t.rts}</span></div>
+          <div class="t-act like${t.liked?' liked':''}" onclick="doLike(${t.id})"><span>${t.liked?'❤️':'🤍'}</span><span class="t-num">${t.likes}</span></div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function updateProfCount() {
+  const c = tweets.filter(t=>t.isOwn).length;
+  document.getElementById('profTweetCount').textContent = c + ' tweets';
+}
+
+// ──── PAGES ────
+function showPage(p) {
+  document.querySelectorAll('.page').forEach(el=>el.classList.remove('on'));
+  document.getElementById('page-'+p).classList.add('on');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  const map = {feed:0,explore:1,profile:4};
+  const btns = document.querySelectorAll('.nav-btn');
+  if(map[p]!==undefined) btns[map[p]].classList.add('active');
+  if(p==='profile'){renderProfileFeed();updateProfCount();}
+}
+
+function switchTab(el, name) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ──── MODAL ────
+function openModal() {
+  document.getElementById('modalBg').classList.add('on');
+  setTimeout(()=>document.getElementById('modalTa').focus(),200);
+}
+function closeModal() { document.getElementById('modalBg').classList.remove('on'); }
+function clickOutModal(e) { if(e.target.id==='modalBg') closeModal(); }
+
+// ──── TOAST ────
+let toastT;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('on');
+  clearTimeout(toastT);
+  toastT = setTimeout(()=>el.classList.remove('on'), 2800);
+}
+
+// ──── KEYBOARD ────
+document.addEventListener('keydown', e => {
+  if(e.key==='Escape') closeModal();
+  if((e.ctrlKey||e.metaKey) && e.key==='n') { e.preventDefault(); openModal(); }
+  if((e.ctrlKey||e.metaKey) && e.key==='Enter') {
+    if(document.getElementById('modalBg').classList.contains('on')) postFromModal();
+    else postFromFeed();
+  }
+});
+
+// ──── INIT ────
+renderTweets(tweets, 'tweetList');
+renderTrends();
+renderWho();
+renderProfileFeed();
+</script>
+</body>
+</html>
